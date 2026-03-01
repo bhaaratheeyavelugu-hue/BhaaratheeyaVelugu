@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
 import { prisma } from "@/lib/prisma";
+import { getAllPublishedEditions } from "@/lib/data";
 
 const ReaderView = dynamic(
   () => import("@/components/reader-view").then((m) => ({ default: m.ReaderView })),
@@ -24,22 +25,18 @@ export default async function ReadPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const session = await auth();
-  const { id } = await params;
-  const { page: pageParam } = await searchParams;
+  const [{ id }, { page: pageParam }] = await Promise.all([params, searchParams]);
 
-  const edition = await prisma.edition.findUnique({
-    where: { id },
-    include: { pages: { orderBy: { pageNumber: "asc" } } },
-  });
+  const [session, edition, allEditions] = await Promise.all([
+    auth(),
+    prisma.edition.findUnique({
+      where: { id },
+      include: { pages: { orderBy: { pageNumber: "asc" } } },
+    }),
+    getAllPublishedEditions()
+  ]);
+
   if (!edition || !edition.isPublished) redirect("/");
-
-  // Fetch all published editions to build the date and edition selectors in the header
-  const allEditions = await prisma.edition.findMany({
-    where: { isPublished: true },
-    select: { id: true, date: true, region: true },
-    orderBy: [{ date: "desc" }, { region: "asc" }],
-  });
 
   let initialPage = 1;
   const pageFromQuery = pageParam ? parseInt(pageParam, 10) : 0;

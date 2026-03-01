@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import dynamic from "next/dynamic";
-import { prisma } from "@/lib/prisma";
+import { getLatestEditionIdByRegion } from "@/lib/data";
 
 const StatePicker = dynamic(
   () => import("@/components/state-picker").then((m) => ({ default: m.StatePicker })),
@@ -22,18 +22,9 @@ export default async function HomePage() {
   const regionCookie = cookieStore.get("userRegion")?.value;
 
   if (regionCookie) {
-    // Attempt to find the latest edition for this region
-    // Note: We use contains since the exact DB string might differ (e.g. "Andhra Pradesh - Main")
-    const latestEdition = await prisma.edition.findFirst({
-      where: { 
-        isPublished: true, 
-        region: { contains: regionCookie } 
-      },
-      orderBy: { date: "desc" }
-    });
-
-    if (latestEdition) {
-      redirect(`/read/${latestEdition.id}`);
+    const latestEditionId = await getLatestEditionIdByRegion(regionCookie);
+    if (latestEditionId) {
+      redirect(`/read/${latestEditionId}`);
     }
   }
 
