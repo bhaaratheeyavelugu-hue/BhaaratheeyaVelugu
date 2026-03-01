@@ -8,33 +8,28 @@ import { STATES } from "@/lib/states";
 export function StatePicker() {
   const router = useRouter();
   const [remember, setRemember] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const handleSelect = async (stateName: string) => {
-    if (typeof window === "undefined") {
-      router.refresh();
-      return;
-    }
-    if (remember) {
-      // eslint-disable-next-line react-hooks/immutability -- intentional cookie set
-      document.cookie = `userRegion=${stateName}; path=/; max-age=${60 * 60 * 24 * 30}`;
-      router.refresh();
-    } else {
-      // Delete the cookie just in case it was set previously
-      // eslint-disable-next-line react-hooks/immutability
-      document.cookie = "userRegion=; path=/; max-age=0";
-      
-      try {
-        const res = await fetch(`/api/editions?region=${encodeURIComponent(stateName)}`);
-        const editions = await res.json();
-        if (editions && editions.length > 0) {
-          router.push(`/read/${editions[0].id}`);
-        } else {
-          // If no edition found, refresh to trigger the state picker again (or maybe show an alert in a real app)
-          alert(`No published editions found for ${stateName}`);
-        }
-      } catch (err) {
-        console.error("Failed to fetch edition", err);
+    if (typeof window === "undefined" || loading) return;
+    setLoading(true);
+    try {
+      if (remember) {
+        document.cookie = `userRegion=${stateName}; path=/; max-age=${60 * 60 * 24 * 30}`;
+      } else {
+        document.cookie = "userRegion=; path=/; max-age=0";
       }
+      const res = await fetch(`/api/editions?region=${encodeURIComponent(stateName)}`);
+      const editions = await res.json();
+      if (editions?.length > 0) {
+        router.push(`/read/${editions[0].id}`);
+      } else {
+        setLoading(false);
+        alert(`No published editions found for ${stateName}`);
+      }
+    } catch (err) {
+      console.error("Failed to fetch edition", err);
+      setLoading(false);
     }
   };
 
@@ -71,18 +66,19 @@ export function StatePicker() {
           className="w-full max-w-5xl mx-auto px-4 py-6 md:py-10 flex flex-col items-center"
         >
           <h2 className="text-center font-editorial text-xl md:text-3xl text-[var(--ink)] mb-6 font-bold">
-            Select your region
+            {loading ? "Loading…" : "Select your region"}
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6 w-full">
             {STATES.map((s, i) => (
               <motion.button
                 key={s.id}
+                type="button"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                onClick={() => !s.comingSoon && handleSelect(s.name)}
-                disabled={s.comingSoon}
-                className={`group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] border transition-all duration-300 shadow-[var(--shadow-card)] bg-[var(--paper-elevated)] border-[var(--paper-border)] ${s.comingSoon ? "cursor-not-allowed opacity-60" : "hover:shadow-[var(--shadow-modal)] hover:border-[var(--masthead)]"}`}
+                onClick={() => !s.comingSoon && !loading && handleSelect(s.name)}
+                disabled={s.comingSoon || loading}
+                className={`group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] border transition-all duration-300 shadow-[var(--shadow-card)] bg-[var(--paper-elevated)] border-[var(--paper-border)] ${s.comingSoon ? "cursor-not-allowed opacity-60" : loading ? "cursor-wait opacity-80" : "hover:shadow-[var(--shadow-modal)] hover:border-[var(--masthead)]"}`}
               >
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-6 text-[var(--ink)]">
                   <div
