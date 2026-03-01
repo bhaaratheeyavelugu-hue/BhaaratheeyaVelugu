@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
@@ -9,6 +9,28 @@ export function StatePicker() {
   const router = useRouter();
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const prefetchCache = useRef<Record<string, { id: string } | null>>({});
+  const prefetchPromises = useRef<Record<string, Promise<{ id: string } | null>>>({});
+
+  const fetchLatestEdition = async (stateName: string): Promise<{ id: string } | null> => {
+    const res = await fetch(`/api/editions?region=${encodeURIComponent(stateName)}`);
+    const editions = await res.json();
+    return editions?.length > 0 ? { id: editions[0].id } : null;
+  };
+
+  const prefetch = (stateName: string) => {
+    if (prefetchCache.current[stateName] !== undefined) return;
+    if (prefetchPromises.current[stateName]) return;
+    prefetchPromises.current[stateName] = fetchLatestEdition(stateName).then((result) => {
+      prefetchCache.current[stateName] = result;
+      return result;
+    });
+  };
+
+  useEffect(() => {
+    const first = STATES.find((s) => !s.comingSoon);
+    if (first) prefetch(first.name);
+  }, []);
 
   const handleSelect = async (stateName: string) => {
     if (typeof window === "undefined" || loading) return;
@@ -19,10 +41,15 @@ export function StatePicker() {
       } else {
         document.cookie = "userRegion=; path=/; max-age=0";
       }
-      const res = await fetch(`/api/editions?region=${encodeURIComponent(stateName)}`);
-      const editions = await res.json();
-      if (editions?.length > 0) {
-        router.push(`/read/${editions[0].id}`);
+      const cached = prefetchCache.current[stateName];
+      if (cached) {
+        router.push(`/read/${cached.id}`);
+        return;
+      }
+      const inFlight = prefetchPromises.current[stateName];
+      const result = inFlight ? await inFlight : await fetchLatestEdition(stateName);
+      if (result) {
+        router.push(`/read/${result.id}`);
       } else {
         setLoading(false);
         alert(`No published editions found for ${stateName}`);
@@ -76,6 +103,8 @@ export function StatePicker() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
+                onMouseEnter={() => !s.comingSoon && prefetch(s.name)}
+                onTouchStart={() => !s.comingSoon && prefetch(s.name)}
                 onClick={() => !s.comingSoon && !loading && handleSelect(s.name)}
                 disabled={s.comingSoon || loading}
                 className={`group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[3/4] border transition-all duration-300 shadow-[var(--shadow-card)] bg-[var(--paper-elevated)] border-[var(--paper-border)] ${s.comingSoon ? "cursor-not-allowed opacity-60" : loading ? "cursor-wait opacity-80" : "hover:shadow-[var(--shadow-modal)] hover:border-[var(--masthead)]"}`}
