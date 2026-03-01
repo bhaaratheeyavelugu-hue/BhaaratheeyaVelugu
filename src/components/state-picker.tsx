@@ -24,6 +24,7 @@ export function StatePicker() {
     if (stateName in prefetchPromises.current) return;
     prefetchPromises.current[stateName] = fetchLatestEdition(stateName).then((result) => {
       prefetchCache.current[stateName] = result;
+      if (result?.id) router.prefetch(`/read/${result.id}`);
       return result;
     });
   };

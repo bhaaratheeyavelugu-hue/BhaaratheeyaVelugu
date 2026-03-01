@@ -524,11 +524,11 @@ function PDFPageView({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const margin = isThumbnail ? "100px" : isMobile ? "250px" : "600px";
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { rootMargin: isThumbnail ? "200px" : "1000px" } // Load a bit ahead
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: margin, threshold: 0 }
     );
     if (containerRef.current) observer.observe(containerRef.current);
     return () => observer.disconnect();
