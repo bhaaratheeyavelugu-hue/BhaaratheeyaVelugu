@@ -58,5 +58,6 @@ export async function DELETE(
 
   const { id } = await params;
   await prisma.edition.delete({ where: { id } });
+  revalidateTag("editions", "max");
   return NextResponse.json({ ok: true });
 }
