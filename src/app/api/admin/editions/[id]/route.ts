@@ -35,7 +35,7 @@ export async function PATCH(
   });
 
   if (Object.hasOwn(data, "isPublished")) {
-    revalidateTag("editions");
+    revalidateTag("editions", "max");
   }
 
   return NextResponse.json({
