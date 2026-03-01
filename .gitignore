@@ -16,6 +16,9 @@
 # next.js
 /.next/
 /out/
+# app dir icons (copied at build from public/)
+src/app/favicon.ico
+src/app/apple-icon.png
 
 # production
 /build
