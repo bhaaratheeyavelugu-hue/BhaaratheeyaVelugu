@@ -1,7 +1,21 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { ReaderView } from "@/components/reader-view";
+import dynamic from "next/dynamic";
 import { prisma } from "@/lib/prisma";
+
+const ReaderView = dynamic(
+  () => import("@/components/reader-view").then((m) => ({ default: m.ReaderView })),
+  { loading: () => <ReadPageSkeleton /> }
+);
+
+function ReadPageSkeleton() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--background)] gap-4">
+      <img src="/logo.png" alt="" className="h-14 w-14 object-contain animate-pulse opacity-70" />
+      <p className="text-sm font-medium text-[var(--ink-muted)] uppercase tracking-wider">Loading edition…</p>
+    </div>
+  );
+}
 
 export default async function ReadPage({
   params,

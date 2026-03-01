@@ -75,7 +75,7 @@ export function NewspaperHome({ editions, continueReading, session, isAdmin, ava
                 >
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-[var(--ink)]">
                     <div className={`mb-6 flex items-center justify-center w-20 h-20 md:w-28 md:h-28 transition-transform duration-300 ${s.comingSoon ? "opacity-50 [filter:grayscale(1)]" : "group-hover:scale-110"}`}>
-                      <img src={s.image} alt="" className="w-full h-full object-contain" aria-hidden />
+                      <img src={s.image} alt="" className="w-full h-full object-contain" loading="lazy" decoding="async" aria-hidden />
                     </div>
                     
                     <h2 className="font-editorial text-2xl md:text-3xl font-bold tracking-wide text-center">{s.name}</h2>

@@ -13,9 +13,10 @@ export function StatePicker() {
   const prefetchPromises = useRef<Record<string, Promise<{ id: string } | null>>>({});
 
   const fetchLatestEdition = async (stateName: string): Promise<{ id: string } | null> => {
-    const res = await fetch(`/api/editions?region=${encodeURIComponent(stateName)}`);
-    const editions = await res.json();
-    return editions?.length > 0 ? { id: editions[0].id } : null;
+    const res = await fetch(`/api/editions/latest?region=${encodeURIComponent(stateName)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && typeof data.id === "string" ? { id: data.id } : null;
   };
 
   const prefetch = (stateName: string) => {
@@ -117,6 +118,8 @@ export function StatePicker() {
                       src={s.image}
                       alt=""
                       className="w-full h-full object-contain"
+                      loading="lazy"
+                      decoding="async"
                       aria-hidden
                     />
                   </div>

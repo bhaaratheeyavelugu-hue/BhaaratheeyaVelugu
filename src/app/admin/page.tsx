@@ -1,10 +1,15 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { AdminDashboard } from "@/components/admin-dashboard";
+import dynamic from "next/dynamic";
 import { LogoutButton } from "@/components/logout-button";
 import { BrandLogo } from "@/components/brand-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+
+const AdminDashboard = dynamic(
+  () => import("@/components/admin-dashboard").then((m) => ({ default: m.AdminDashboard })),
+  { loading: () => <div className="min-h-[40vh] flex items-center justify-center text-[var(--ink-muted)] font-medium">Loading…</div> }
+);
 
 export default async function AdminPage() {
   const session = await auth();
