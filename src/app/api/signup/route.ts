@@ -15,8 +15,9 @@ export async function POST(request: Request) {
     const parsed = signupSchema.safeParse(body);
     
     if (!parsed.success) {
+      const first = parsed.error.issues[0];
       return NextResponse.json(
-        { error: parsed.error.errors[0].message },
+        { error: first?.message ?? "Invalid input" },
         { status: 400 }
       );
     }
