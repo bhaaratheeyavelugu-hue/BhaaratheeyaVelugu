@@ -2,13 +2,15 @@ import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const bucket = process.env.S3_BUCKET ?? process.env.R2_BUCKET;
-const region = process.env.AWS_REGION ?? "auto";
 const endpoint = process.env.S3_ENDPOINT ?? process.env.R2_ENDPOINT;
-const forcePathStyle = false; // R2 usually doesn't need this anymore, S3 might
+const forcePathStyle = false; // R2 uses virtual-hosted style by default
+
+const isR2 = !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && endpoint);
+// R2 requires region "auto" in the signing scope; AWS_REGION (e.g. ap-south-1) causes 400 on presigned GET
+const region = isR2 ? "auto" : (process.env.AWS_REGION ?? "auto");
 
 console.log("Storage init:", { bucket, region, endpoint, hasR2Key: !!process.env.R2_ACCESS_KEY_ID });
 
-const isR2 = !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && endpoint);
 const s3 =
   bucket && (process.env.AWS_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID)
     ? new S3Client({
