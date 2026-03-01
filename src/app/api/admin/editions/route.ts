@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { uploadBuffer, isStorageConfigured } from "@/lib/storage";
@@ -123,6 +124,8 @@ export async function POST(request: Request) {
         imageKey: key,
       })),
     });
+
+    revalidateTag("editions", "max");
 
     return NextResponse.json({
       id: edition.id,
