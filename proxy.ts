@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Lightweight middleware only (no auth import) to stay under Vercel Edge 1MB limit.
+// Lightweight proxy (no auth import) to stay under Vercel Edge 1MB limit.
 // Auth and redirects are enforced in pages and API routes (admin, profile, /api/admin, etc.).
-export function middleware(_req: NextRequest) {
+export function proxy(_req: NextRequest) {
   return NextResponse.next();
 }
 
