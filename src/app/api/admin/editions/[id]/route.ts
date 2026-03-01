@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -32,6 +33,10 @@ export async function PATCH(
     where: { id },
     data,
   });
+
+  if (Object.hasOwn(data, "isPublished")) {
+    revalidateTag("editions");
+  }
 
   return NextResponse.json({
     id: edition.id,

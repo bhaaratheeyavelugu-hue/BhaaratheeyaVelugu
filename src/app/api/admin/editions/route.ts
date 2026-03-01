@@ -111,7 +111,7 @@ export async function POST(request: Request) {
         language,
         totalPages,
         pdfKey: key,
-        isPublished: false,
+        isPublished: true,
       },
     });
 

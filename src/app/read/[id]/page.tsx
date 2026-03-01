@@ -38,6 +38,12 @@ export default async function ReadPage({
 
   if (!edition || !edition.isPublished) redirect("/");
 
+  const currentMeta = { id, date: edition.date, region: edition.region };
+  const allEditionsWithCurrent =
+    allEditions.some((e) => e.id === id)
+      ? allEditions
+      : [currentMeta, ...allEditions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   let initialPage = 1;
   const pageFromQuery = pageParam ? parseInt(pageParam, 10) : 0;
   if (pageFromQuery > 0) {
@@ -59,7 +65,7 @@ export default async function ReadPage({
       initialPage={initialPage}
       isLoggedIn={!!session?.user}
       isAdmin={session?.user ? ((session.user as { role?: string }).role === "ADMIN" || (session.user as { role?: string }).role === "SUPER_ADMIN") : false}
-      allEditions={allEditions}
+      allEditions={allEditionsWithCurrent}
     />
   );
 }

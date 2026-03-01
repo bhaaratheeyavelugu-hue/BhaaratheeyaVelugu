@@ -1,6 +1,8 @@
 import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 
+const EDITIONS_CACHE_TAG = "editions";
+
 export const getLatestEditionIdByRegion = unstable_cache(
   async (region: string) => {
     const edition = await prisma.edition.findFirst({
@@ -11,7 +13,7 @@ export const getLatestEditionIdByRegion = unstable_cache(
     return edition?.id || null;
   },
   ["latest-edition-by-region"],
-  { revalidate: 300 } // Cache for 5 minutes
+  { revalidate: 300, tags: [EDITIONS_CACHE_TAG] }
 );
 
 export const getAllPublishedEditions = unstable_cache(
@@ -23,5 +25,5 @@ export const getAllPublishedEditions = unstable_cache(
     });
   },
   ["all-published-editions"],
-  { revalidate: 300 } // Cache for 5 minutes
+  { revalidate: 300, tags: [EDITIONS_CACHE_TAG] }
 );
