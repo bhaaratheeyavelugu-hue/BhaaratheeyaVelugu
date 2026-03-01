@@ -8,6 +8,7 @@ const forcePathStyle = false; // R2 usually doesn't need this anymore, S3 might
 
 console.log("Storage init:", { bucket, region, endpoint, hasR2Key: !!process.env.R2_ACCESS_KEY_ID });
 
+const isR2 = !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY && endpoint);
 const s3 =
   bucket && (process.env.AWS_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID)
     ? new S3Client({
@@ -23,6 +24,11 @@ const s3 =
                 secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
               }
             : undefined,
+        // R2 does not support x-amz-checksum-mode; omit it from presigned GetObject URLs to avoid 400
+        ...(isR2 && {
+          requestChecksumCalculation: "WHEN_REQUIRED" as const,
+          responseChecksumValidation: "WHEN_REQUIRED" as const,
+        }),
       })
     : null;
 
