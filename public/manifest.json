@@ -1,0 +1,24 @@
+{
+  "name": "Bharatiya Velugu – Digital Newspaper",
+  "short_name": "Bharatiya Velugu",
+  "description": "Read your daily newspaper. Track progress, bookmark pages, earn levels.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#b45309",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

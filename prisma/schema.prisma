@@ -1,0 +1,156 @@
+// Epaper platform - SQLite for demo; use PostgreSQL in production
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  passwordHash   String?   // for staff email/password login
+  role           Role      @default(USER)
+  level          Int       @default(1)
+  totalPagesRead Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  readingProgress ReadingProgress[]
+  bookmarks      Bookmark[]
+  starredEditions StarredEdition[]
+  adminPermissions AdminPermissions?
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at       Int?
+  token_type       String?
+  scope            String?
+  id_token         String?
+  session_state    String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Edition {
+  id          String   @id @default(cuid())
+  date        DateTime
+  region      String
+  language    String   @default("en")
+  totalPages  Int
+  pdfKey      String?  // S3/R2 key for full PDF
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  pages       EditionPage[]
+  readingProgress ReadingProgress[]
+  bookmarks   Bookmark[]
+  starredEditions StarredEdition[]
+}
+
+model EditionPage {
+  id        String  @id @default(cuid())
+  editionId String
+  pageNumber Int
+  imageKey  String  // S3/R2 key for page image
+
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([editionId, pageNumber])
+  @@index([editionId])
+}
+
+model ReadingProgress {
+  id           String   @id @default(cuid())
+  userId       String
+  editionId    String
+  lastPageRead Int      @default(0)
+  percentage   Float    @default(0)
+  updatedAt    DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, editionId])
+  @@index([userId])
+  @@index([editionId])
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  userId     String
+  editionId  String
+  pageNumber Int
+  createdAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, editionId, pageNumber])
+  @@index([userId])
+}
+
+model StarredEdition {
+  id        String   @id @default(cuid())
+  userId    String
+  editionId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  edition Edition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, editionId])
+  @@index([userId])
+}
+
+model AdminPermissions {
+  id           String  @id @default(cuid())
+  adminId      String  @unique
+  canUpload    Boolean @default(true)
+  canEdit      Boolean @default(true)
+  canDelete    Boolean @default(false)
+  canManageUsers Boolean @default(false)
+
+  user User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
