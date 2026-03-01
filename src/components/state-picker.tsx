@@ -20,7 +20,7 @@ export function StatePicker() {
 
   const prefetch = (stateName: string) => {
     if (prefetchCache.current[stateName] !== undefined) return;
-    if (prefetchPromises.current[stateName]) return;
+    if (stateName in prefetchPromises.current) return;
     prefetchPromises.current[stateName] = fetchLatestEdition(stateName).then((result) => {
       prefetchCache.current[stateName] = result;
       return result;
