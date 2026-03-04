@@ -466,7 +466,7 @@ export function ReaderView({
           </span>
         </Link>
         <div className="flex items-center gap-2 md:gap-4 shrink-0">
-          <ThemeToggle className="hidden md:flex scale-90" />
+          <ThemeToggle className="scale-90" />
           {!isLoggedIn ? (
             <Link href="/login" className="text-sm font-bold text-[var(--masthead)] hover:text-[var(--masthead-hover)] hidden sm:block">
               Sign In
