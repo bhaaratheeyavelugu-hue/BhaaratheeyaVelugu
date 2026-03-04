@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Newsreader, Playfair_Display } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { IOSInstallPrompt } from "@/components/ios-install-prompt";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -70,10 +69,7 @@ export default function RootLayout({
             __html: `(function(){var t=localStorage.getItem('theme');if(!t)t='light';document.documentElement.dataset.theme=t})();`,
           }}
         />
-        <Providers>
-          {children}
-          <IOSInstallPrompt />
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
