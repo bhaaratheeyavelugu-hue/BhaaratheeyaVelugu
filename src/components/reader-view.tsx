@@ -133,12 +133,6 @@ export function ReaderView({
     const { x: left, y: top, w: width, h: height } = snipBox;
 
     try {
-      const captureCanvas = document.createElement('canvas');
-      captureCanvas.width = width;
-      captureCanvas.height = height;
-      const ctx = captureCanvas.getContext('2d');
-      if (!ctx) throw new Error("Could not create canvas context");
-
       if (activeCanvas) {
         const rect = activeCanvas.getBoundingClientRect();
         const scaleX = activeCanvas.width / rect.width;
@@ -149,7 +143,14 @@ export function ReaderView({
         const srcW = width * scaleX;
         const srcH = height * scaleY;
 
-        ctx.drawImage(activeCanvas, srcX, srcY, srcW, srcH, 0, 0, width, height);
+        const captureCanvas = document.createElement('canvas');
+        captureCanvas.width = srcW;
+        captureCanvas.height = srcH;
+        const ctx = captureCanvas.getContext('2d');
+        if (!ctx) throw new Error("Could not create canvas context");
+
+        ctx.drawImage(activeCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+        setSnipImage(captureCanvas.toDataURL("image/png", 1.0));
       } else if (activeImg) {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = activeImg.naturalWidth;
@@ -167,11 +168,16 @@ export function ReaderView({
           const srcW = width * scaleX;
           const srcH = height * scaleY;
 
-          ctx.drawImage(tempCanvas, srcX, srcY, srcW, srcH, 0, 0, width, height);
+          const captureCanvas = document.createElement('canvas');
+          captureCanvas.width = srcW;
+          captureCanvas.height = srcH;
+          const ctx = captureCanvas.getContext('2d');
+          if (!ctx) throw new Error("Could not create canvas context");
+
+          ctx.drawImage(tempCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
+          setSnipImage(captureCanvas.toDataURL("image/png", 1.0));
         }
       }
-
-      setSnipImage(captureCanvas.toDataURL("image/png"));
     } catch (error) {
       console.error("Failed to snip:", error);
       alert("Snipping failed. Make sure the page has fully loaded.");
@@ -528,7 +534,7 @@ export function ReaderView({
       </div>
 
       {/* Main Content Area: Thumbnails + Reader */}
-      <div className="flex flex-1 overflow-hidden relative">
+      <div className="flex flex-1 overflow-hidden relative pb-[3rem]">
 
         {/* Toggleable Thumbnail Strip (Left Side) */}
         <AnimatePresence>
@@ -681,7 +687,7 @@ export function ReaderView({
       )}
 
       {/* Bottom Toolbar - z below header so it never covers hamburger */}
-      <footer className="h-12 shrink-0 border-t border-[var(--paper-border)] bg-[var(--paper)] px-4 flex items-center justify-between shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-20">
+      <footer className="fixed bottom-0 left-0 right-0 h-12 shrink-0 border-t border-[var(--paper-border)] bg-[var(--paper)] px-4 flex items-center justify-between shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-[45]">
 
         {/* Left: Thumbnails Toggle */}
         <button
