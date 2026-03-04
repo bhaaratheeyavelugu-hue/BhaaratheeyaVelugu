@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { STATES } from "@/lib/states";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function StatePicker() {
   const router = useRouter();
@@ -63,7 +64,10 @@ export function StatePicker() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col relative">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
       {/* Logo and title always visible at top - not pushed off on mobile */}
       <div className="shrink-0 pt-4 pb-2 px-4 text-center border-b border-[var(--paper-border)] bg-[var(--background)]">
         <motion.div
