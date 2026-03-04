@@ -458,7 +458,7 @@ export function ReaderView({
     <div className="fixed inset-0 flex flex-col bg-[var(--background)] font-sans overflow-hidden" ref={containerRef}>
 
       {/* Top bar: Logo + app actions (like The Hindu top header) */}
-      <header className="min-h-[3.25rem] flex shrink-0 items-center justify-between border-b border-[var(--paper-border)] bg-[var(--paper)] px-3 sm:px-4 shadow-sm z-40">
+      <header className="min-h-[3.25rem] flex shrink-0 items-center justify-between border-b border-[var(--paper-border)] bg-[var(--paper)] px-3 sm:px-4 shadow-sm z-50">
         <Link href="/" className="flex items-center gap-2 group shrink-0 min-w-0">
           <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain transition-transform group-hover:scale-105 shrink-0" />
           <span className="hidden sm:block font-logo text-lg md:text-xl font-black text-[var(--ink)] tracking-tight pb-0.5 leading-[1.2]" style={{ overflow: "visible" }}>
@@ -481,11 +481,9 @@ export function ReaderView({
               <LogoutButton className="text-xs font-semibold text-[var(--ink-muted)] hover:text-[var(--ink)] bg-[var(--paper-border)] hover:bg-[var(--paper-elevated)] px-3 py-1.5 rounded transition-colors !p-0 !border-none hidden sm:flex items-center justify-center h-[28px] w-[70px]" />
             </div>
           )}
+          <SidebarMenu session={isLoggedIn ? {} : null} isAdmin={isAdmin} />
         </div>
       </header>
-
-      {/* Mobile Sidebar (Rendered at Root to break out of Header Z-Index) */}
-      <SidebarMenu session={isLoggedIn ? {} : null} isAdmin={isAdmin} />
 
       {/* Toolbar: Edition, Date, Zoom, Pages (integrated selection bars like The Hindu) */}
       <div className="flex shrink-0 items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[var(--paper-border)] bg-[var(--paper-elevated)] z-30">
