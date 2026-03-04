@@ -481,9 +481,11 @@ export function ReaderView({
               <LogoutButton className="text-xs font-semibold text-[var(--ink-muted)] hover:text-[var(--ink)] bg-[var(--paper-border)] hover:bg-[var(--paper-elevated)] px-3 py-1.5 rounded transition-colors !p-0 !border-none hidden sm:flex items-center justify-center h-[28px] w-[70px]" />
             </div>
           )}
-          <SidebarMenu session={isLoggedIn ? {} : null} isAdmin={isAdmin} />
         </div>
       </header>
+
+      {/* Mobile Sidebar (Rendered at Root to break out of Header Z-Index) */}
+      <SidebarMenu session={isLoggedIn ? {} : null} isAdmin={isAdmin} />
 
       {/* Toolbar: Edition, Date, Zoom, Pages (integrated selection bars like The Hindu) */}
       <div className="flex shrink-0 items-center gap-3 sm:gap-4 px-3 sm:px-4 py-2 border-b border-[var(--paper-border)] bg-[var(--paper-elevated)] z-30">
@@ -531,53 +533,55 @@ export function ReaderView({
           </button>
           <span className="text-sm font-semibold text-[var(--ink-muted)]">Page <span className="text-[var(--ink)] font-bold">{currentPage}</span> of {totalPages}</span>
         </div>
-      </div>
+      </div >
 
       {/* Main Content Area: Thumbnails + Reader */}
-      <div className="flex flex-1 overflow-hidden relative pb-[3rem]">
+      < div className="flex flex-1 overflow-hidden relative pb-[3rem]" >
 
         {/* Toggleable Thumbnail Strip (Left Side) */}
         <AnimatePresence>
-          {showThumbnails && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 140, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              className="h-full bg-[var(--paper)] border-r border-[var(--paper-border)] shadow-[var(--shadow-sm)] overflow-y-auto z-20 flex-shrink-0 hide-scrollbar"
-              ref={thumbnailsContainerRef}
-            >
-              <div className="p-3 flex flex-col gap-4">
-                <div className="text-[10px] font-bold text-[var(--ink-muted)] uppercase tracking-widest text-center pb-2 border-b border-[var(--paper-border)]">Pages</div>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
-                  const pUrl = edition.pages.find((pg) => pg.pageNumber === p)?.url;
-                  const isCurrent = p === currentPage;
-                  return (
-                    <button
-                      key={p}
-                      id={`thumb-${p}`}
-                      onClick={() => scrollToPage(p)}
-                      className={`relative flex flex-col items-center gap-1 group ${isCurrent ? 'opacity-100' : 'opacity-60 hover:opacity-100'} transition-opacity`}
-                    >
-                      <div className={`w-24 bg-[var(--paper-elevated)] border-2 ${isCurrent ? 'border-[var(--masthead)] shadow-md' : 'border-[var(--paper-border)]'} rounded overflow-hidden relative`}>
-                        {pUrl && pUrl !== edition.pdfUrl ? (
-                          <img src={pUrl} alt={`Thumbnail ${p}`} className="w-full h-auto object-contain" />
-                        ) : (
-                          <PDFPageView
-                            pdfUrl={edition.pdfUrl}
-                            pageUrl={edition.pdfUrl}
-                            currentPage={p}
-                            isThumbnail={true}
-                          />
-                        )}
-                      </div>
-                      <span className={`text-xs font-semibold ${isCurrent ? 'text-[var(--masthead)]' : 'text-[var(--ink-muted)]'}`}>{p}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {
+            showThumbnails && (
+              <motion.div
+                initial={{ width: 0, opacity: 0 }}
+                animate={{ width: 140, opacity: 1 }}
+                exit={{ width: 0, opacity: 0 }}
+                className="h-full bg-[var(--paper)] border-r border-[var(--paper-border)] shadow-[var(--shadow-sm)] overflow-y-auto z-20 flex-shrink-0 hide-scrollbar"
+                ref={thumbnailsContainerRef}
+              >
+                <div className="p-3 flex flex-col gap-4">
+                  <div className="text-[10px] font-bold text-[var(--ink-muted)] uppercase tracking-widest text-center pb-2 border-b border-[var(--paper-border)]">Pages</div>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+                    const pUrl = edition.pages.find((pg) => pg.pageNumber === p)?.url;
+                    const isCurrent = p === currentPage;
+                    return (
+                      <button
+                        key={p}
+                        id={`thumb-${p}`}
+                        onClick={() => scrollToPage(p)}
+                        className={`relative flex flex-col items-center gap-1 group ${isCurrent ? 'opacity-100' : 'opacity-60 hover:opacity-100'} transition-opacity`}
+                      >
+                        <div className={`w-24 bg-[var(--paper-elevated)] border-2 ${isCurrent ? 'border-[var(--masthead)] shadow-md' : 'border-[var(--paper-border)]'} rounded overflow-hidden relative`}>
+                          {pUrl && pUrl !== edition.pdfUrl ? (
+                            <img src={pUrl} alt={`Thumbnail ${p}`} className="w-full h-auto object-contain" />
+                          ) : (
+                            <PDFPageView
+                              pdfUrl={edition.pdfUrl}
+                              pageUrl={edition.pdfUrl}
+                              currentPage={p}
+                              isThumbnail={true}
+                            />
+                          )}
+                        </div>
+                        <span className={`text-xs font-semibold ${isCurrent ? 'text-[var(--masthead)]' : 'text-[var(--ink-muted)]'}`}>{p}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )
+          }
+        </AnimatePresence >
 
         <div
           ref={scrollRef}
@@ -600,91 +604,95 @@ export function ReaderView({
             </div>
           ))}
         </div>
-      </div>
+      </div >
 
       {/* Snipping Tool Canvas Overlay */}
-      {isSnipping && snipBox && (
-        <div
-          className="fixed inset-0 z-50 pointer-events-auto bg-black/50 touch-none"
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        >
-          {/* Top bar instructions */}
-          <div className="absolute top-0 left-0 right-0 bg-black/80 text-white p-3 text-center text-sm font-semibold pointer-events-none drop-shadow-md">
-            Resize and drag the dashed box to select your clipping.
-          </div>
-
-          {/* Close Button */}
-          <button
-            className="absolute top-3 right-3 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 pointer-events-auto shadow-md"
-            onClick={() => setIsSnipping(false)}
-            title="Cancel Snipping"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-
-          {/* The Resizable Box */}
+      {
+        isSnipping && snipBox && (
           <div
-            className="absolute border-2 border-dashed border-white bg-white/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"
-            style={{
-              left: snipBox.x,
-              top: snipBox.y,
-              width: snipBox.w,
-              height: snipBox.h
-            }}
+            className="fixed inset-0 z-50 pointer-events-auto bg-black/50 touch-none"
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
           >
-            {/* Central Drag Area */}
-            <div
-              className="absolute inset-0 cursor-move"
-              onPointerDown={(e) => handlePointerDown(e, 'move')}
-            />
+            {/* Top bar instructions */}
+            <div className="absolute top-0 left-0 right-0 bg-black/80 text-white p-3 text-center text-sm font-semibold pointer-events-none drop-shadow-md">
+              Resize and drag the dashed box to select your clipping.
+            </div>
 
-            {/* Edge Handles */}
-            <div className="absolute top-0 left-0 right-0 h-2 -mt-1 cursor-ns-resize" onPointerDown={(e) => handlePointerDown(e, 'n')} />
-            <div className="absolute bottom-0 left-0 right-0 h-2 -mb-1 cursor-ns-resize" onPointerDown={(e) => handlePointerDown(e, 's')} />
-            <div className="absolute top-0 bottom-0 left-0 w-2 -ml-1 cursor-ew-resize" onPointerDown={(e) => handlePointerDown(e, 'w')} />
-            <div className="absolute top-0 bottom-0 right-0 w-2 -mr-1 cursor-ew-resize" onPointerDown={(e) => handlePointerDown(e, 'e')} />
-
-            {/* Corner Handles */}
-            <div className="absolute top-0 left-0 w-5 h-5 -mt-2.5 -ml-2.5 bg-white rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'nw')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
-            <div className="absolute top-0 right-0 w-5 h-5 -mt-2.5 -mr-2.5 bg-white rounded-full cursor-nesw-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'ne')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
-            <div className="absolute bottom-0 left-0 w-5 h-5 -mb-2.5 -ml-2.5 bg-white rounded-full cursor-nesw-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'sw')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
-            <div className="absolute bottom-0 right-0 w-5 h-5 -mb-2.5 -mr-2.5 bg-white rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'se')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
-
-            {/* Capture specific region button inside the box */}
+            {/* Close Button */}
             <button
-              className="absolute -bottom-16 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-xl pointer-events-auto flex items-center gap-2 whitespace-nowrap active:scale-95 transition-transform"
-              onClick={captureSnip}
+              className="absolute top-3 right-3 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 pointer-events-auto shadow-md"
+              onClick={() => setIsSnipping(false)}
+              title="Cancel Snipping"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
-              Capture Snip
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
-          </div>
-        </div>
-      )}
 
-      {/* Snipping Modal result */}
-      {snipImage && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
-          <div className="bg-[var(--paper)] rounded-xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-4 border-b border-[var(--paper-border)]">
-              <h3 className="font-bold text-[var(--ink)]">Your Clipped Article</h3>
-              <button onClick={() => setSnipImage(null)} className="text-[var(--ink-muted)] hover:bg-[var(--paper-elevated)] p-1 rounded-full"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-            </div>
-            <div className="relative p-4 overflow-auto bg-[var(--paper-border)] flex-1 min-h-[200px] flex items-center justify-center">
-              <img src={snipImage} alt="Clipped Region" className="max-w-full shadow-md object-contain" />
-            </div>
-            <div className="p-4 border-t border-[var(--paper-border)] flex justify-end gap-3">
-              <button onClick={() => setSnipImage(null)} className="px-4 py-2 rounded-md font-semibold text-[var(--ink-muted)] hover:bg-[var(--paper-elevated)]">Cancel</button>
-              <button onClick={shareSnip} className="px-4 py-2 rounded-md font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-5.368m0 5.368l5.662 3.775m-5.662-3.775l5.662-3.775m5.662 3.775a3 3 0 100-5.368 3 3 0 000 5.368z" /></svg>
-                Share
+            {/* The Resizable Box */}
+            <div
+              className="absolute border-2 border-dashed border-white bg-white/10 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"
+              style={{
+                left: snipBox.x,
+                top: snipBox.y,
+                width: snipBox.w,
+                height: snipBox.h
+              }}
+            >
+              {/* Central Drag Area */}
+              <div
+                className="absolute inset-0 cursor-move"
+                onPointerDown={(e) => handlePointerDown(e, 'move')}
+              />
+
+              {/* Edge Handles */}
+              <div className="absolute top-0 left-0 right-0 h-2 -mt-1 cursor-ns-resize" onPointerDown={(e) => handlePointerDown(e, 'n')} />
+              <div className="absolute bottom-0 left-0 right-0 h-2 -mb-1 cursor-ns-resize" onPointerDown={(e) => handlePointerDown(e, 's')} />
+              <div className="absolute top-0 bottom-0 left-0 w-2 -ml-1 cursor-ew-resize" onPointerDown={(e) => handlePointerDown(e, 'w')} />
+              <div className="absolute top-0 bottom-0 right-0 w-2 -mr-1 cursor-ew-resize" onPointerDown={(e) => handlePointerDown(e, 'e')} />
+
+              {/* Corner Handles */}
+              <div className="absolute top-0 left-0 w-5 h-5 -mt-2.5 -ml-2.5 bg-white rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'nw')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
+              <div className="absolute top-0 right-0 w-5 h-5 -mt-2.5 -mr-2.5 bg-white rounded-full cursor-nesw-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'ne')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
+              <div className="absolute bottom-0 left-0 w-5 h-5 -mb-2.5 -ml-2.5 bg-white rounded-full cursor-nesw-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'sw')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
+              <div className="absolute bottom-0 right-0 w-5 h-5 -mb-2.5 -mr-2.5 bg-white rounded-full cursor-nwse-resize shadow-md flex items-center justify-center pointer-events-auto" onPointerDown={(e) => handlePointerDown(e, 'se')}><div className="w-2 h-2 rounded-full bg-blue-500" /></div>
+
+              {/* Capture specific region button inside the box */}
+              <button
+                className="absolute -bottom-16 left-1/2 -translate-x-1/2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-full shadow-xl pointer-events-auto flex items-center gap-2 whitespace-nowrap active:scale-95 transition-transform"
+                onClick={captureSnip}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+                Capture Snip
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
+      {/* Snipping Modal result */}
+      {
+        snipImage && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 px-4">
+            <div className="bg-[var(--paper)] rounded-xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+              <div className="flex justify-between items-center p-4 border-b border-[var(--paper-border)]">
+                <h3 className="font-bold text-[var(--ink)]">Your Clipped Article</h3>
+                <button onClick={() => setSnipImage(null)} className="text-[var(--ink-muted)] hover:bg-[var(--paper-elevated)] p-1 rounded-full"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+              </div>
+              <div className="relative p-4 overflow-auto bg-[var(--paper-border)] flex-1 min-h-[200px] flex items-center justify-center">
+                <img src={snipImage} alt="Clipped Region" className="max-w-full shadow-md object-contain" />
+              </div>
+              <div className="p-4 border-t border-[var(--paper-border)] flex justify-end gap-3">
+                <button onClick={() => setSnipImage(null)} className="px-4 py-2 rounded-md font-semibold text-[var(--ink-muted)] hover:bg-[var(--paper-elevated)]">Cancel</button>
+                <button onClick={shareSnip} className="px-4 py-2 rounded-md font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-5.368m0 5.368l5.662 3.775m-5.662-3.775l5.662-3.775m5.662 3.775a3 3 0 100-5.368 3 3 0 000 5.368z" /></svg>
+                  Share
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
 
       {/* Bottom Toolbar - z below header so it never covers hamburger */}
       <footer className="fixed bottom-0 left-0 right-0 h-12 shrink-0 border-t border-[var(--paper-border)] bg-[var(--paper)] px-4 flex items-center justify-between shadow-[0_-2px_10px_rgba(0,0,0,0.05)] z-[45]">
@@ -774,7 +782,7 @@ export function ReaderView({
 
       </footer>
 
-    </div>
+    </div >
   );
 }
 

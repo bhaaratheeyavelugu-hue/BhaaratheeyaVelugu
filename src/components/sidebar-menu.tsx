@@ -16,7 +16,7 @@ export function SidebarMenu({ session, isAdmin }: Props) {
   return (
     <>
       {/* Mobile Hamburger Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="p-2 hover:bg-[var(--paper-elevated)] rounded-lg transition-colors flex items-center justify-center text-[var(--ink)] md:hidden relative z-50"
         aria-label="Open Menu"
@@ -27,7 +27,7 @@ export function SidebarMenu({ session, isAdmin }: Props) {
       </button>
 
       {/* Desktop Menu Link (optional, or you can use the hamburger on desktop too) */}
-      <button 
+      <button
         onClick={() => setIsOpen(true)}
         className="hidden md:flex p-1.5 hover:bg-[var(--paper-elevated)] rounded transition-colors text-[var(--ink)]"
         aria-label="Open Menu"
@@ -44,7 +44,7 @@ export function SidebarMenu({ session, isAdmin }: Props) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]"
             />
 
             {/* Sidebar */}
@@ -53,13 +53,13 @@ export function SidebarMenu({ session, isAdmin }: Props) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[var(--background)] shadow-2xl z-[101] flex flex-col overflow-y-auto"
+              className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-[var(--background)] shadow-2xl z-[9999] flex flex-col overflow-y-auto"
             >
               <div className="p-4 border-b border-[var(--paper-border)] flex items-center justify-between bg-[var(--paper-elevated)]">
                 <div className="flex items-center min-w-0">
                   <span className="font-logo text-xl text-[var(--ink)] tracking-tight overflow-visible leading-[1.2] pb-0.5">Bhaaratheeya velugu</span>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsOpen(false)}
                   className="p-2 hover:bg-[var(--paper-border)] rounded-full text-[var(--ink-muted)] transition-colors"
                 >
@@ -93,16 +93,16 @@ export function SidebarMenu({ session, isAdmin }: Props) {
                 </div>
 
                 <div className="border-t border-[var(--paper-border)] my-2"></div>
-                
+
                 <div className="px-6 py-4 mt-auto">
                   {session ? (
                     <div className="w-full">
                       <LogoutButton className="w-full justify-start text-[var(--accent)] hover:bg-[var(--accent-soft)] py-3 rounded-lg border border-[var(--paper-border)]" />
                     </div>
                   ) : (
-                    <Link 
-                      href="/login" 
-                      onClick={() => setIsOpen(false)} 
+                    <Link
+                      href="/login"
+                      onClick={() => setIsOpen(false)}
                       className="block w-full text-center bg-[var(--masthead)] text-white font-medium py-3 rounded-lg hover:bg-[var(--masthead-hover)] transition-colors"
                     >
                       Sign In
