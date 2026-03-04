@@ -23,6 +23,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  debug: true,
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 },
   pages: { signIn: "/login" },
@@ -71,22 +72,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const domain = email.split("@")[1]?.toLowerCase();
       const allowedDomain = domain && ADMIN_ALLOWED_DOMAINS.includes(domain);
       // If existing user, let them in; role is already set
-      const existing = await prisma.user.findUnique({ where: { email } });
-      if (existing) return true;
-      // New user: super admin emails -> SUPER_ADMIN, allowed domain -> ADMIN, else -> USER
-      return true; // Adapter will create user; we set role in jwt/session
+      try {
+        const existing = await prisma.user.findUnique({ where: { email } });
+        if (existing) return true;
+        // New user: super admin emails -> SUPER_ADMIN, allowed domain -> ADMIN, else -> USER
+        return true; // Adapter will create user; we set role in jwt/session
+      } catch (error) {
+        console.error("Error in signIn callback during DB query:", error);
+        return false; // Prevent 500 splash screen, bubble up standard error
+      }
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: (user.email ?? "").toLowerCase() },
-          include: { adminPermissions: true },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
-          token.level = dbUser.level;
-          token.totalPagesRead = dbUser.totalPagesRead;
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: (user.email ?? "").toLowerCase() },
+            include: { adminPermissions: true },
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            token.level = dbUser.level;
+            token.totalPagesRead = dbUser.totalPagesRead;
+          }
+        } catch (error) {
+          console.error("Error fetching dbUser in jwt callback:", error);
         }
       }
       if (trigger === "update" && session) {
@@ -128,10 +138,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const domain = email.split("@")[1]?.toLowerCase();
       const allowedDomain = domain && ADMIN_ALLOWED_DOMAINS.includes(domain);
       const role: Role = isSuperAdmin ? "SUPER_ADMIN" : allowedDomain ? "ADMIN" : "USER";
-      await prisma.user.update({
-        where: { email },
-        data: { role },
-      });
+
+      try {
+        await prisma.user.update({
+          where: { email },
+          data: { role },
+        });
+      } catch (error) {
+        console.error("Error setting role in createUser event:", error);
+      }
     },
   },
 });

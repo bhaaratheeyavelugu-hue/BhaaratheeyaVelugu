@@ -63,7 +63,7 @@ export function StatePicker() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[var(--background)] min-h-screen overflow-hidden">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
       {/* Logo and title always visible at top - not pushed off on mobile */}
       <div className="shrink-0 pt-4 pb-2 px-4 text-center border-b border-[var(--paper-border)] bg-[var(--background)]">
         <motion.div
@@ -86,8 +86,8 @@ export function StatePicker() {
         </motion.div>
       </div>
 
-      {/* Scrollable region cards - no justify-center so content flows from top */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0">
+      {/* Scrollable region cards */}
+      <div className="flex-1 w-full mx-auto pb-10">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -159,7 +159,7 @@ export function StatePicker() {
           </motion.label>
         </motion.div>
       </div>
-      <div className="shrink-0 py-3 text-center text-xs text-[var(--ink-muted)] uppercase tracking-widest bg-[var(--background)] border-t border-[var(--paper-border)]">
+      <div className="py-4 text-center text-xs text-[var(--ink-muted)] uppercase tracking-widest bg-[var(--background)] border-t border-[var(--paper-border)] mt-auto">
         Read the paper as it is printed
       </div>
     </div>
