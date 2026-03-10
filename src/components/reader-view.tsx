@@ -185,19 +185,25 @@ export function ReaderView({
         const ctx = baseCanvas.getContext('2d');
         if (ctx) {
           // --- WATERMARK LOGIC ---
-          const desiredWatermarkWidth = Math.max(80, Math.min(200, captureW * 0.15));
-          const logoSize = desiredWatermarkWidth * 0.3;
-          const padding = captureW * 0.02;
+          const logoSize = Math.max(20, Math.min(80, captureW * 0.05)); // 5% of base image width
+          const padding = logoSize * 0.4;
+          const fontSize = Math.max(10, logoSize * 0.65);
+
+          // Configure font first so we can measure the text dynamically
+          ctx.font = `bold ${fontSize}px sans-serif`;
+          const textMetrics = ctx.measureText("Bhaaratheeya Velugu");
+          const textWidth = textMetrics.width;
+
+          // Now the strip width is perfectly sized to fit the logo + text + padding
+          const stripHeight = logoSize + padding;
+          const stripWidth = padding + logoSize + (padding * 0.5) + textWidth + padding;
 
           const watermarkBottomY = captureH - padding;
           const watermarkRightX = captureW - padding;
 
-          const stripHeight = logoSize + (padding * 0.5);
-          const stripWidth = desiredWatermarkWidth + (padding * 2);
-
           ctx.beginPath();
           ctx.roundRect(watermarkRightX - stripWidth, watermarkBottomY - stripHeight, stripWidth, stripHeight, stripHeight / 4);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
           ctx.fill();
 
           const logoImg = new Image();
@@ -207,17 +213,15 @@ export function ReaderView({
           await new Promise<void>((resolve) => {
             logoImg.onload = () => {
               const logoX = watermarkRightX - stripWidth + padding;
-              const logoY = watermarkBottomY - stripHeight + (stripHeight - logoSize) / 2;
+              const logoY = watermarkBottomY - stripHeight + (padding / 2);
               ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
               ctx.fillStyle = "#0f172a";
-              const fontSize = Math.max(8, logoSize * 0.4);
-              ctx.font = `bold ${fontSize}px sans-serif`;
               ctx.textAlign = "left";
               ctx.textBaseline = "middle";
 
               const textX = logoX + logoSize + (padding * 0.5);
-              const textY = logoY + (logoSize / 2);
+              const textY = watermarkBottomY - (stripHeight / 2) + Math.max(1, fontSize * 0.05); // Vertically centered tweak
               ctx.fillText("Bhaaratheeya Velugu", textX, textY);
               resolve();
             };
