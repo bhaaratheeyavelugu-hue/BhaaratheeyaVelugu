@@ -133,24 +133,27 @@ export function ReaderView({
     const { x: left, y: top, w: width, h: height } = snipBox;
 
     try {
+      let baseCanvas: HTMLCanvasElement | null = null;
+      let captureW = 0;
+      let captureH = 0;
+
       if (activeCanvas) {
         const rect = activeCanvas.getBoundingClientRect();
         const scaleX = activeCanvas.width / rect.width;
         const scaleY = activeCanvas.height / rect.height;
 
-        const srcX = (left - rect.left) * scaleX;
-        const srcY = (top - rect.top) * scaleY;
-        const srcW = width * scaleX;
-        const srcH = height * scaleY;
+        const srcX = Math.max(0, (left - rect.left) * scaleX);
+        const srcY = Math.max(0, (top - rect.top) * scaleY);
+        captureW = width * scaleX;
+        captureH = height * scaleY;
 
-        const captureCanvas = document.createElement('canvas');
-        captureCanvas.width = srcW;
-        captureCanvas.height = srcH;
-        const ctx = captureCanvas.getContext('2d');
-        if (!ctx) throw new Error("Could not create canvas context");
-
-        ctx.drawImage(activeCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-        setSnipImage(captureCanvas.toDataURL("image/png", 1.0));
+        baseCanvas = document.createElement('canvas');
+        baseCanvas.width = captureW;
+        baseCanvas.height = captureH;
+        const ctx = baseCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(activeCanvas, srcX, srcY, captureW, captureH, 0, 0, captureW, captureH);
+        }
       } else if (activeImg) {
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = activeImg.naturalWidth;
@@ -163,19 +166,65 @@ export function ReaderView({
           const scaleX = activeImg.naturalWidth / rect.width;
           const scaleY = activeImg.naturalHeight / rect.height;
 
-          const srcX = (left - rect.left) * scaleX;
-          const srcY = (top - rect.top) * scaleY;
-          const srcW = width * scaleX;
-          const srcH = height * scaleY;
+          const srcX = Math.max(0, (left - rect.left) * scaleX);
+          const srcY = Math.max(0, (top - rect.top) * scaleY);
+          captureW = width * scaleX;
+          captureH = height * scaleY;
 
-          const captureCanvas = document.createElement('canvas');
-          captureCanvas.width = srcW;
-          captureCanvas.height = srcH;
-          const ctx = captureCanvas.getContext('2d');
-          if (!ctx) throw new Error("Could not create canvas context");
+          baseCanvas = document.createElement('canvas');
+          baseCanvas.width = captureW;
+          baseCanvas.height = captureH;
+          const ctx = baseCanvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(tempCanvas, srcX, srcY, captureW, captureH, 0, 0, captureW, captureH);
+          }
+        }
+      }
 
-          ctx.drawImage(tempCanvas, srcX, srcY, srcW, srcH, 0, 0, srcW, srcH);
-          setSnipImage(captureCanvas.toDataURL("image/png", 1.0));
+      if (baseCanvas) {
+        const ctx = baseCanvas.getContext('2d');
+        if (ctx) {
+          // --- WATERMARK LOGIC ---
+          const desiredWatermarkWidth = Math.max(80, Math.min(200, captureW * 0.15));
+          const logoSize = desiredWatermarkWidth * 0.3;
+          const padding = captureW * 0.02;
+
+          const watermarkBottomY = captureH - padding;
+          const watermarkRightX = captureW - padding;
+
+          const stripHeight = logoSize + (padding * 0.5);
+          const stripWidth = desiredWatermarkWidth + (padding * 2);
+
+          ctx.beginPath();
+          ctx.roundRect(watermarkRightX - stripWidth, watermarkBottomY - stripHeight, stripWidth, stripHeight, stripHeight / 4);
+          ctx.fillStyle = "rgba(255, 255, 255, 0.9)";
+          ctx.fill();
+
+          const logoImg = new Image();
+          logoImg.crossOrigin = "anonymous";
+          logoImg.src = "/logo.png";
+
+          await new Promise<void>((resolve) => {
+            logoImg.onload = () => {
+              const logoX = watermarkRightX - stripWidth + padding;
+              const logoY = watermarkBottomY - stripHeight + (stripHeight - logoSize) / 2;
+              ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+
+              ctx.fillStyle = "#0f172a";
+              const fontSize = Math.max(8, logoSize * 0.4);
+              ctx.font = `bold ${fontSize}px sans-serif`;
+              ctx.textAlign = "left";
+              ctx.textBaseline = "middle";
+
+              const textX = logoX + logoSize + (padding * 0.5);
+              const textY = logoY + (logoSize / 2);
+              ctx.fillText("Bhaaratheeya Velugu", textX, textY);
+              resolve();
+            };
+            logoImg.onerror = () => resolve();
+          });
+
+          setSnipImage(baseCanvas.toDataURL("image/png", 1.0));
         }
       }
     } catch (error) {
@@ -681,11 +730,21 @@ export function ReaderView({
                 <img src={snipImage} alt="Clipped Region" className="max-w-full shadow-md object-contain" />
               </div>
               <div className="p-4 border-t border-[var(--paper-border)] flex justify-end gap-3">
-                <button onClick={() => setSnipImage(null)} className="px-4 py-2 rounded-md font-semibold text-[var(--ink-muted)] hover:bg-[var(--paper-elevated)]">Cancel</button>
-                <button onClick={shareSnip} className="px-4 py-2 rounded-md font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-5.368m0 5.368l5.662 3.775m-5.662-3.775l5.662-3.775m5.662 3.775a3 3 0 100-5.368 3 3 0 000 5.368z" /></svg>
-                  Share
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={() => {
+                    const a = document.createElement('a');
+                    a.href = snipImage;
+                    a.download = `velugu-clip-${Date.now()}.png`;
+                    a.click();
+                  }} className="px-3 py-2 rounded-md font-semibold text-[var(--ink)] border border-[var(--paper-border)] hover:bg-[var(--paper-elevated)] flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Download
+                  </button>
+                  <button onClick={shareSnip} className="px-4 py-2 rounded-md font-bold text-white bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-5.368m0 5.368l5.662 3.775m-5.662-3.775l5.662-3.775m5.662 3.775a3 3 0 100-5.368 3 3 0 000 5.368z" /></svg>
+                    Share
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -802,6 +861,7 @@ function PDFPageView({
   const [isVisible, setIsVisible] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const renderTaskRef = useRef<any>(null);
 
   useEffect(() => {
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -850,7 +910,8 @@ function PDFPageView({
         //   canvas.style.height = `${viewport.height / scale}px`;
         // }
 
-        await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+        renderTaskRef.current = page.render({ canvasContext: ctx, viewport, canvas });
+        await renderTaskRef.current.promise;
         setImgUrl(null);
       } catch (e: any) {
         if (!cancelled) {
@@ -859,9 +920,17 @@ function PDFPageView({
         }
       }
     };
-    load();
+
+    // DEBOUNCE LOGIC (Solves fast-scrolling OOM crashes)
+    const timeoutId = setTimeout(load, 250);
+
     return () => {
+      clearTimeout(timeoutId);
       cancelled = true;
+      if (renderTaskRef.current) {
+        renderTaskRef.current.cancel();
+        renderTaskRef.current = null;
+      }
     };
   }, [pageUrl, currentPage, pdfUrl, isVisible]);
 
