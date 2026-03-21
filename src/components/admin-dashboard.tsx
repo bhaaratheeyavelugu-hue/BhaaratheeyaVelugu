@@ -79,7 +79,7 @@ export function AdminDashboard({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     try {
       // 1. Locally count PDF pages by scanning raw buffer for /Count
       const arrayBuffer = await file.arrayBuffer();
-      const str = new TextDecoder("binary").decode(arrayBuffer);
+      const str = new TextDecoder("iso-8859-1").decode(arrayBuffer);
       const regex = /\/Count\s+(\d+)/g;
       let match;
       let maxPages = 0;
