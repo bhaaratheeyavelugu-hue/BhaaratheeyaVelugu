@@ -925,8 +925,8 @@ function PDFPageView({
       }
     };
 
-    // DEBOUNCE LOGIC (Solves fast-scrolling OOM crashes)
-    const timeoutId = setTimeout(load, 250);
+    // DEBOUNCE LOGIC (Solves fast-scrolling OOM crashes, keeping it snappy 50ms)
+    const timeoutId = setTimeout(load, 50);
 
     return () => {
       clearTimeout(timeoutId);
