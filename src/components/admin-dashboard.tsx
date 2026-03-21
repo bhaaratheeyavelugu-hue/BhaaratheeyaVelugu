@@ -67,23 +67,74 @@ export function AdminDashboard({ isSuperAdmin }: { isSuperAdmin: boolean }) {
     const file = (form.elements.namedItem("file") as HTMLInputElement)?.files?.[0];
     const date = (form.elements.namedItem("date") as HTMLInputElement)?.value;
     const region = (form.elements.namedItem("region") as HTMLInputElement)?.value || "default";
+    
     if (!file || !date) {
       setUploadError("Select a PDF and date.");
       return;
     }
+    
     setUploadError("");
     setUploading(true);
+    
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("date", date);
-      fd.append("region", region);
-      const res = await fetch("/api/admin/editions", { method: "POST", body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Upload failed");
+      // 1. Locally count PDF pages by scanning raw buffer for /Count
+      const arrayBuffer = await file.arrayBuffer();
+      const str = new TextDecoder("binary").decode(arrayBuffer);
+      const regex = /\/Count\s+(\d+)/g;
+      let match;
+      let maxPages = 0;
+      while ((match = regex.exec(str)) !== null) {
+        const count = parseInt(match[1], 10);
+        if (count > maxPages) maxPages = count;
+      }
+      const totalPages = maxPages > 0 ? maxPages : 1;
+
+      // 2. Init upload to get Presigned URL
+      const initRes = await fetch("/api/admin/editions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "getUploadUrl",
+          filename: file.name,
+          contentType: file.type,
+          date,
+          region,
+        }),
+      });
+      const initData = await initRes.json();
+      if (!initRes.ok) throw new Error(initData.error || "Failed to initiate upload");
+
+      const { uploadUrl, key } = initData;
+
+      // 3. Direct PUT to S3/R2 bypassing Vercel limits
+      const uploadRes = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      
+      if (!uploadRes.ok) throw new Error("Cloud storage upload failed");
+
+      // 4. Confirm creation in database
+      const confirmRes = await fetch("/api/admin/editions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "createEdition",
+          date,
+          region,
+          language: "en",
+          totalPages,
+          key,
+        }),
+      });
+      const confirmData = await confirmRes.json();
+      if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save edition record");
+
       loadEditions();
       form.reset();
     } catch (err) {
+      console.error(err);
       setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);

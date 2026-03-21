@@ -40,6 +40,12 @@ export async function getSignedReadUrl(key: string, expiresIn = 3600): Promise<s
   return getSignedUrl(s3, command, { expiresIn });
 }
 
+export async function getSignedUploadUrl(key: string, contentType: string, expiresIn = 3600): Promise<string> {
+  if (!s3 || !bucket) throw new Error("Storage not configured");
+  const command = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
+  return getSignedUrl(s3, command, { expiresIn });
+}
+
 export async function uploadBuffer(key: string, body: Buffer, contentType: string): Promise<string> {
   if (!s3 || !bucket) throw new Error("Storage not configured");
   await s3.send(
